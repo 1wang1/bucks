@@ -10,6 +10,7 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -27,5 +28,9 @@ public class CoffeeService {
         Optional<Coffee> coffee = coffeeRepository.findOne(example);
         log.info("Coffee Found: {}", coffee);
         return coffee;
+    }
+
+    public List<Coffee> findAllCoffee() {
+        return coffeeRepository.findAll();
     }
 }
