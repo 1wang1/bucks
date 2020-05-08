@@ -16,6 +16,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -31,6 +32,7 @@ import java.util.Optional;
 @EnableTransactionManagement
 @EnableJpaRepositories
 @SpringBootApplication
+@EnableCaching(proxyTargetClass = true) // 拦截类的执行
 public class BucksApplication implements ApplicationRunner {
 
     @Autowired
@@ -50,7 +52,16 @@ public class BucksApplication implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        log.info(jedisPoolConfig.toString());
+        log.info("count:{}",coffeeService.findAllCoffee().size());
+        for (int i = 0; i < 10; i++) {
+            log.info("Reading from cache.");
+            coffeeService.findAllCoffee();
+        }
+        coffeeService.reloadCoffee();
+        log.info("Reading after refresh.");
+        coffeeService.findAllCoffee().forEach(c->log.info("coffee:{}",c));
+
+/*        log.info(jedisPoolConfig.toString());
         try (Jedis jedis = jedisPool.getResource()) {
             List<Coffee> allCoffee = coffeeService.findAllCoffee();
             log.info("all coffee:{}",allCoffee.size());
@@ -64,7 +75,9 @@ public class BucksApplication implements ApplicationRunner {
 
             String price = jedis.hget("springbucks-menu", "espresso");
             log.info("espresson-{}", Money.ofMinor(CurrencyUnit.of("CNY"), Long.parseLong(price)));
-        }
+        }*/
+
+
 //        log.info("All Coffee: {}", coffeeRepository.findAll());
 //        Optional<Coffee> latte = coffeeService.findOneCoffee("Latte");
 //        if (latte.isPresent()) {
