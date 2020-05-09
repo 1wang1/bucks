@@ -57,7 +57,9 @@ public class BucksApplication implements ApplicationRunner {
             log.info("Reading from cache.");
             coffeeService.findAllCoffee();
         }
-        coffeeService.reloadCoffee();
+//        coffeeService.reloadCoffee();
+        // 设置了缓存的失效时间为5秒
+        Thread.sleep(5000);
         log.info("Reading after refresh.");
         coffeeService.findAllCoffee().forEach(c->log.info("coffee:{}",c));
 
