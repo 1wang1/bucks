@@ -6,6 +6,7 @@ import com.wzk.bucks.model.OrderState;
 import com.wzk.bucks.repository.CoffeeRepository;
 import com.wzk.bucks.service.CoffeeOrderService;
 import com.wzk.bucks.service.CoffeeService;
+import io.lettuce.core.ReadFrom;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
@@ -15,10 +16,13 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.data.redis.LettuceClientConfigurationBuilderCustomizer;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -32,7 +36,7 @@ import java.util.Optional;
 @EnableTransactionManagement
 @EnableJpaRepositories
 @SpringBootApplication
-@EnableCaching(proxyTargetClass = true) // 拦截类的执行
+//@EnableCaching(proxyTargetClass = true) // 拦截类的执行
 public class BucksApplication implements ApplicationRunner {
 
     @Autowired
@@ -41,18 +45,40 @@ public class BucksApplication implements ApplicationRunner {
     private CoffeeService coffeeService;
     @Autowired
     private CoffeeOrderService orderService;
-    @Autowired
+/*    @Autowired
     private JedisPool jedisPool;
     @Autowired
-    private JedisPoolConfig jedisPoolConfig;
+    private JedisPoolConfig jedisPoolConfig;*/
 
     public static void main(String[] args) {
         SpringApplication.run(BucksApplication.class, args);
     }
 
+    @Bean
+    public RedisTemplate<String,Coffee> redisTemplate(RedisConnectionFactory redisConnectionFactory){
+        RedisTemplate<String, Coffee> template = new RedisTemplate<>();
+        template.setConnectionFactory(redisConnectionFactory);
+        return template;
+    }
+
+    @Bean
+    public LettuceClientConfigurationBuilderCustomizer customizer(){
+        return builder->builder.readFrom(ReadFrom.MASTER_PREFERRED);
+    }
+
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        log.info("count:{}",coffeeService.findAllCoffee().size());
+        Optional<Coffee> c = coffeeService.findOneCoffee("mocha");
+        log.info("Coffee:{}",c);
+
+        for (int i = 0; i < 5; i++) {
+            c = coffeeService.findOneCoffee("mocha");
+        }
+
+        log.info("value from Redis:{}",c);
+
+
+        /* log.info("count:{}",coffeeService.findAllCoffee().size());
         for (int i = 0; i < 10; i++) {
             log.info("Reading from cache.");
             coffeeService.findAllCoffee();
@@ -61,7 +87,7 @@ public class BucksApplication implements ApplicationRunner {
         // 设置了缓存的失效时间为5秒
         Thread.sleep(5000);
         log.info("Reading after refresh.");
-        coffeeService.findAllCoffee().forEach(c->log.info("coffee:{}",c));
+        coffeeService.findAllCoffee().forEach(c->log.info("coffee:{}",c));*/
 
 /*        log.info(jedisPoolConfig.toString());
         try (Jedis jedis = jedisPool.getResource()) {
@@ -89,7 +115,7 @@ public class BucksApplication implements ApplicationRunner {
 //        }
     }
 
-    @Bean
+    /*@Bean
     @ConfigurationProperties("redis")
     public JedisPoolConfig jedisPoolConfig() {
         return new JedisPoolConfig();
@@ -98,5 +124,5 @@ public class BucksApplication implements ApplicationRunner {
     @Bean(destroyMethod = "close")
     public JedisPool jedisPool(@Value("${redis.host}") String host) {
         return new JedisPool(jedisPoolConfig(), host);
-    }
+    }*/
 }
