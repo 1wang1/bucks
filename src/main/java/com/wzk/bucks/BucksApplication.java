@@ -20,6 +20,7 @@ import org.springframework.boot.autoconfigure.data.redis.LettuceClientConfigurat
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -37,6 +38,7 @@ import java.util.Optional;
 @EnableJpaRepositories
 @SpringBootApplication
 //@EnableCaching(proxyTargetClass = true) // 拦截类的执行
+@EnableAspectJAutoProxy // 开启AspectJ的支持
 public class BucksApplication implements ApplicationRunner {
 
     @Autowired
